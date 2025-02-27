@@ -81,25 +81,29 @@ const add_entry = (type: string, name: string, extra: recipe | ingredient) => {
   // errors: if the name already exists, if cooktime < 0, type is not recipe/ingredient
   if (type != 'recipe' && type != 'ingredient') {
     throw Error('400')
-  } else if (cookbook.find(x => x == name) != undefined) {
+  } else if (cookbook.find(x => x.name == name) != undefined) {
     throw Error('400')
   }
   if ('cookTime' in extra) {
     if (extra.cookTime < 0) {
       throw Error('400')
+    } else {
+      cookbook.push({type, name, cookTime: extra.cookTime})
     }
   } else if ('requiredItems' in extra) {
     // Recipe requiredItems can only have one element per name.
     // this was confusing to interpret at 12am
     const copyRequiredItems = new Set(extra.requiredItems.slice().map(x => x.name))
-    // yea diff lengths means theres dupes yea
-    if (copyRequiredItems.length != extra.requiredItems) {
+    // yea diff lengths means theres dupes yea hopefully x
+    if (copyRequiredItems.size != extra.requiredItems.length) {
       throw Error('400')
+    } else {
+      cookbook.push({type, name, requiredItems: extra.requiredItems})
     }
-
+    
   }
-
-
+  
+  return { }
 }
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
