@@ -80,13 +80,13 @@ app.post("/entry", (req:Request, res:Response) => {
 const add_entry = (type: string, name: string, extra: recipe | ingredient) => {
   // errors: if the name already exists, if cooktime < 0, type is not recipe/ingredient
   if (type != 'recipe' && type != 'ingredient') {
-    throw Error('400')
+    return {error: 'placeholder'}
   } else if (cookbook.find(x => x.name == name) != undefined) {
-    throw Error('400')
+    return {error: 'placeholder'}
   }
   if ('cookTime' in extra) {
     if (extra.cookTime < 0) {
-      throw Error('400')
+      return {error: 'placeholder'}
     } else {
       cookbook.push({type, name, cookTime: extra.cookTime})
     }
@@ -96,7 +96,7 @@ const add_entry = (type: string, name: string, extra: recipe | ingredient) => {
     const copyRequiredItems = new Set(extra.requiredItems.slice().map(x => x.name))
     // yea diff lengths means theres dupes yea hopefully x
     if (copyRequiredItems.size != extra.requiredItems.length) {
-      throw Error('400')
+      return {error: 'placeholder'}
     } else {
       cookbook.push({type, name, requiredItems: extra.requiredItems})
     }
