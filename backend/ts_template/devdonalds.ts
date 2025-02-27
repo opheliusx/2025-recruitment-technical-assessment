@@ -45,8 +45,24 @@ app.post("/parse", (req:Request, res:Response) => {
 // [TASK 1] ====================================================================
 // Takes in a recipeName and returns it in a form that 
 const parse_handwriting = (recipeName: string): string | null => {
-  // TODO: implement me
-  return recipeName
+  // implement me
+  // Removes hypens (-, _) as whitespace, and  deletes non alphabet/space chars
+  const dashesBegone = /-|_/g
+  const onlyAlpha = /[^a-zA-Z ]/g
+  const removeForbiddenChar = (recipeName.replace(dashesBegone, ' ')).replace(onlyAlpha, '').toLowerCase()
+  // if nothing is left return null
+  if (removeForbiddenChar.length == 0) {
+    return null
+  }
+
+  const newNameList = removeForbiddenChar.split(' ').map(x => x[0].toUpperCase() + x.slice(1))
+
+  const res = newNameList.join(' ')
+  if (res.length == 0) {
+    return null
+  }
+  
+  return res
 }
 
 // [TASK 2] ====================================================================
@@ -72,3 +88,4 @@ const port = 8080;
 app.listen(port, () => {
   console.log(`Running on: http://127.0.0.1:8080`);
 });
+
