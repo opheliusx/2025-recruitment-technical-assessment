@@ -71,43 +71,56 @@ const parse_handwriting = (recipeName: string): string | null => {
 // [TASK 2] ====================================================================
 // Endpoint that adds a CookbookEntry to your magical cookbook
 app.post("/entry", (req:Request, res:Response) => {
-  const {type, name, extra} = req.body
+  let {type, name} = req.body
+  let extra
+  if ('requiredItems' in req.body) {
+    // le recipe
+    extra = req.body.requiredItems
+  } else if ('cookTime' in req.body) {
+    // ingredient
+    extra = req.body.cookTime
+  }
   const result = add_entry(type, name, extra)
+  
   // TODO: implement me
-  res.status(500).send("not yet implemented!")
+  if ('error' in result) {
+    res.status(400)
+  }
+  
+  res.json(result);
 });
 
-const add_entry = (type: string, name: string, extra: recipe | ingredient) => {
+const add_entry = (type: string, name: string, extra: number|requiredItem[]) => {
   // errors: if the name already exists, if cooktime < 0, type is not recipe/ingredient
   if (type != 'recipe' && type != 'ingredient') {
     return {error: 'placeholder'}
   } else if (cookbook.find(x => x.name == name) != undefined) {
     return {error: 'placeholder'}
   }
-  if ('cookTime' in extra) {
-    if (extra.cookTime < 0) {
+
+  if (typeof extra == 'number') {
+    if (extra < 0) { 
       return {error: 'placeholder'}
-    } else {
-      cookbook.push({type, name, cookTime: extra.cookTime})
+    } else { // put dat shit in else
+      cookbook.push({type, name, cookTime: extra})
     }
-  } else if ('requiredItems' in extra) {
+  } else {
     // Recipe requiredItems can only have one element per name.
-    // this was confusing to interpret at 12am
-    const copyRequiredItems = new Set(extra.requiredItems.slice().map(x => x.name))
+    // yo what does this error mean gng
+    const copyRequiredItems = new Set(extra.slice().map(x => x.name))
     // yea diff lengths means theres dupes yea hopefully x
-    if (copyRequiredItems.size != extra.requiredItems.length) {
+    if (copyRequiredItems.size != extra.length) {
       return {error: 'placeholder'}
     } else {
-      cookbook.push({type, name, requiredItems: extra.requiredItems})
+      cookbook.push({type, name, requiredItems: extra.slice()})
     }
-    
   }
-  
   return { }
 }
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get("/summary", (req:Request, res:Request) => {
+  
   // TODO: implement me
   res.status(500).send("not yet implemented!")
 
