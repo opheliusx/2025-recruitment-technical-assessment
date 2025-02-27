@@ -19,6 +19,10 @@ interface ingredient extends cookbookEntry {
   cookTime: number;
 }
 
+interface cookbook {
+  names: string[]
+  entries: cookbookEntry[]
+}
 // =============================================================================
 // ==== HTTP Endpoint Stubs ====================================================
 // =============================================================================
@@ -26,7 +30,7 @@ const app = express();
 app.use(express.json());
 
 // Store your recipes here!
-const cookbook: any = null;
+const cookbook = []
 
 // Task 1 helper (don't touch)
 app.post("/parse", (req:Request, res:Response) => {
@@ -54,7 +58,6 @@ const parse_handwriting = (recipeName: string): string | null => {
   if (removeForbiddenChar.length == 0) {
     return null
   }
-
   const newNameList = removeForbiddenChar.split(' ').map(x => x[0].toUpperCase() + x.slice(1))
 
   const res = newNameList.join(' ')
@@ -68,11 +71,36 @@ const parse_handwriting = (recipeName: string): string | null => {
 // [TASK 2] ====================================================================
 // Endpoint that adds a CookbookEntry to your magical cookbook
 app.post("/entry", (req:Request, res:Response) => {
+  const {type, name, extra} = req.body
+  const result = add_entry(type, name, extra)
   // TODO: implement me
   res.status(500).send("not yet implemented!")
-
 });
 
+const add_entry = (type: string, name: string, extra: recipe | ingredient) => {
+  // errors: if the name already exists, if cooktime < 0, type is not recipe/ingredient
+  if (type != 'recipe' && type != 'ingredient') {
+    throw Error('400')
+  } else if (cookbook.find(x => x == name) != undefined) {
+    throw Error('400')
+  }
+  if ('cookTime' in extra) {
+    if (extra.cookTime < 0) {
+      throw Error('400')
+    }
+  } else if ('requiredItems' in extra) {
+    // Recipe requiredItems can only have one element per name.
+    // this was confusing to interpret at 12am
+    const copyRequiredItems = new Set(extra.requiredItems.slice().map(x => x.name))
+    // yea diff lengths means theres dupes yea
+    if (copyRequiredItems.length != extra.requiredItems) {
+      throw Error('400')
+    }
+
+  }
+
+
+}
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get("/summary", (req:Request, res:Request) => {
