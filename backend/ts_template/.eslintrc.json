@@ -1,3 +1,4 @@
+// credit to the comp1531 course for this config template
 {
   "ignorePatterns": ["build"],
   "parser": "@typescript-eslint/parser",
