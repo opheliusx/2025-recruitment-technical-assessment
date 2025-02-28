@@ -125,6 +125,7 @@ app.get('/summary', (req:Request, res:Request) => {
 const summarise = (name: string) => {
   // i got bored so i added that if a summary exists it just gets returned
   // probably more efficient idk if the original code takes a long time for large datasets
+  // its logn probably?? binary search?  and everything after is n
   const existingSummary = cookbook.summaries.find(x => x.name === name) 
   if (existingSummary !== undefined) {
     return existingSummary
