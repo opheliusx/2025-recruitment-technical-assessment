@@ -82,27 +82,26 @@ app.post("/entry", (req:Request, res:Response) => {
     // ingredient
     extra = req.body.cookTime
   }
-  const result = add_entry(type, name, extra)
+  try {
+    const result = add_entry(type, name, extra)
+    res.json(result);
+  } catch (err) {
+    res.status(400).send(err)
+  } 
   
-  // TODO: implement me
-  if ('error' in result) {
-    res.status(400)
-  }
-  
-  res.json(result);
 });
 
 const add_entry = (type: string, name: string, extra: number|requiredItem[]) => {
   // errors: if the name already exists, if cooktime < 0, type is not recipe/ingredient
   if (type != 'recipe' && type != 'ingredient') {
-    return {error: 'placeholder'}
+    throw Error('Type must be recipe/ingredient')
   } else if (cookbook.entries.find(x => x.name == name) != undefined) {
-    return {error: 'placeholder'}
+    throw Error('Name already exists')
   }
 
   if (typeof extra == 'number') {
     if (extra < 0) { 
-      return {error: 'placeholder negative cooktime err', cookbook}
+      throw Error('Cooktime must be a non negative number')
     } else { // put dat shit in else
       cookbook.ingredients.push(name)
       cookbook.entries.push({type, name, cookTime: extra})
@@ -113,7 +112,7 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
     const copyRequiredItems = new Set(extra.slice().map(x => x.name))
     // yea diff lengths means theres dupes yea hopefully x
     if (copyRequiredItems.size != extra.length) {
-      return {error: 'placeholder'}
+      throw Error('Recipe requiredItems can only have one element per name')
     } else {
       cookbook.recipes.push(name)
       cookbook.entries.push({type, name, requiredItems: extra.slice()})
@@ -125,15 +124,12 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get("/summary", (req:Request, res:Request) => {
   const name = req.query.name
-  const result = summarise(name)
-  // TODO: implement me
-   // TODO: implement me
-   if ('error' in result) {
-    res.status(400)
+  try {
+    const result = summarise(name)
+    res.json(result);
+  } catch (err) {
+    res.status(400).send(err)
   }
-  
-  res.json(result);
-
 });
 
 const summarise = (name: string) => {
@@ -141,9 +137,9 @@ const summarise = (name: string) => {
   // err400 (after) The searched name is NOT a recipe name (ie. an ingredient).
   const fetchItem: recipe = cookbook.entries.find(x => x.name == name)
   if (fetchItem == undefined) {
-    return {error: 'A recipe with the corresponding name cannot be found.'}
+    throw Error('A recipe with the corresponding name cannot be found.')
   } else if (fetchItem.type != 'recipe') {
-    return {error: 'The searched name is NOT a recipe name (ie. an ingredient).'}
+    throw Error('The searched name is NOT a recipe name (ie. an ingredient).')
   }
   
   // err400 The recipe contains recipes or ingredients that aren't in the cookbook.
@@ -151,7 +147,7 @@ const summarise = (name: string) => {
   const ingredientList = fetchItem.requiredItems.map(x => x.name)
   const isInCookbook = ingredientList.filter(x => cookbook.ingredients.includes(x))
   if (isInCookbook.length != ingredientList.length) {
-    return {error: 'The recipe contains recipes or ingredients that aren\'t in the cookbook.'}
+    throw Error('The recipe contains recipes or ingredients that aren\'t in the cookbook.')
   }
 
   const ingredientsInRecipe = cookbook.entries.filter(x => ingredientList.includes(x.name))
