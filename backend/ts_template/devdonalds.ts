@@ -26,7 +26,7 @@ const app = express();
 app.use(express.json());
 
 // Store your recipes here!
-const cookbook = { recipes: [], ingredients: [], entries: [] };
+const cookbook = { recipes: [], ingredients: [], entries: [], summaries: [] };
 
 // Task 1 helper (don't touch)
 app.post('/parse', (req:Request, res:Response) => {
@@ -56,10 +56,6 @@ const parse_handwriting = (recipeName: string): string | null => {
   const newNameList = removeForbiddenChar.split(' ').map(x => x[0].toUpperCase() + x.slice(1));
 
   const res = newNameList.join(' ');
-  if (res.length === 0) {
-    return null;
-  }
-
   return res;
 };
 
@@ -127,6 +123,12 @@ app.get('/summary', (req:Request, res:Request) => {
 });
 
 const summarise = (name: string) => {
+  // i got bored so i added that if a summary exists it just gets returned
+  // probably more efficient idk if the original code takes a long time for large datasets
+  const existingSummary = cookbook.summaries.find(x => x.name === name) 
+  if (existingSummary !== undefined) {
+    return existingSummary
+  }
   // err400 A recipe with the corresponding name cannot be found.
   // err400 (after) The searched name is NOT a recipe name (ie. an ingredient).
   const fetchItem: recipe = cookbook.entries.find(x => x.name === name);
@@ -151,6 +153,7 @@ const summarise = (name: string) => {
     cookTime,
     ingredients: fetchItem.requiredItems.slice()
   };
+  cookbook.summaries.push(summary)
   return summary;
 };
 // =============================================================================
