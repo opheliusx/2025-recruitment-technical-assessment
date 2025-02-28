@@ -100,7 +100,7 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
 
   if (typeof extra == 'number') {
     if (extra < 0) { 
-      return {error: 'placeholder'}
+      return {error: 'placeholder negative cooktime err', cookbook}
     } else { // put dat shit in else
       cookbook.ingredients.push(name)
       cookbook.entries.push({type, name, cookTime: extra})
@@ -122,7 +122,7 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get("/summary", (req:Request, res:Request) => {
-  const name = req.body
+  const name = req.query.name
   const result = summarise(name)
   // TODO: implement me
    // TODO: implement me
@@ -130,9 +130,6 @@ app.get("/summary", (req:Request, res:Request) => {
     res.status(400)
   }
   
-  if ('errornn' in result) {
-    res.status(401)
-  }
   res.json(result);
 
 });
@@ -142,9 +139,9 @@ const summarise = (name: string) => {
   // The searched name is NOT a recipe name (ie. an ingredient).
   const fetchItem: recipe = cookbook.entries.find(x => x.name == name)
   if (fetchItem == undefined) {
-    return {error: 'placeholder'}
+    return {error: 'placeholder err1', COOKBOOK: cookbook.entries, name}
   } else if (fetchItem.type != 'recipe') {
-    return {error: 'placeholder'}
+    return {error: 'placeholder err2'}
   }
   
   // The recipe contains recipes or ingredients that aren't in the cookbook.
@@ -152,7 +149,7 @@ const summarise = (name: string) => {
   const ingredientList = fetchItem.requiredItems.map(x => x.name)
   const isInCookbook = ingredientList.filter(x => cookbook.ingredients.includes(x))
   if (isInCookbook.length != ingredientList.length) {
-    return {errornn: 'placeholder'}
+    return {error: 'placeholder err3', cookbook}
   }
 
   const ingredientsInRecipe = cookbook.entries.filter(x => ingredientList.includes(x.name))
