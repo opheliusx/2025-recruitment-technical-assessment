@@ -53,7 +53,9 @@ const parse_handwriting = (recipeName: string): string | null => {
   // Removes hypens (-, _) as whitespace, and  deletes non alphabet/space chars
   const dashesBegone = /-|_/g
   const onlyAlpha = /[^a-zA-Z ]/g
-  const removeForbiddenChar = (recipeName.replace(dashesBegone, ' ')).replace(onlyAlpha, '').toLowerCase()
+  const removeForbiddenCharPt1 = (recipeName.replace(dashesBegone, ' ')).replace(/ +/g, " ")
+  // got too long
+  const removeForbiddenChar = removeForbiddenCharPt1.replace(onlyAlpha, '').toLowerCase()
   // if nothing is left return null
   if (removeForbiddenChar.length == 0) {
     return null
