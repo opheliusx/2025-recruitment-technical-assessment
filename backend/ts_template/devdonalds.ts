@@ -19,10 +19,6 @@ interface ingredient extends cookbookEntry {
   cookTime: number;
 }
 
-interface cookbook {
-  names: string[]
-  entries: cookbookEntry[]
-}
 // =============================================================================
 // ==== HTTP Endpoint Stubs ====================================================
 // =============================================================================
