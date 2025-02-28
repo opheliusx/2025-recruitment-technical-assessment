@@ -30,7 +30,7 @@ const app = express();
 app.use(express.json());
 
 // Store your recipes here!
-const cookbook = []
+const cookbook = {recipes: [], ingredients: [], entries: []}
 
 // Task 1 helper (don't touch)
 app.post("/parse", (req:Request, res:Response) => {
@@ -94,7 +94,7 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
   // errors: if the name already exists, if cooktime < 0, type is not recipe/ingredient
   if (type != 'recipe' && type != 'ingredient') {
     return {error: 'placeholder'}
-  } else if (cookbook.find(x => x.name == name) != undefined) {
+  } else if (cookbook.entries.find(x => x.name == name) != undefined) {
     return {error: 'placeholder'}
   }
 
@@ -102,7 +102,8 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
     if (extra < 0) { 
       return {error: 'placeholder'}
     } else { // put dat shit in else
-      cookbook.push({type, name, cookTime: extra})
+      cookbook.ingredients.push(name)
+      cookbook.entries.push({type, name, cookTime: extra})
     }
   } else {
     // Recipe requiredItems can only have one element per name.
@@ -112,7 +113,8 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
     if (copyRequiredItems.size != extra.length) {
       return {error: 'placeholder'}
     } else {
-      cookbook.push({type, name, requiredItems: extra.slice()})
+      cookbook.recipes.push(name)
+      cookbook.entries.push({type, name, requiredItems: extra.slice()})
     }
   }
   return { }
@@ -120,12 +122,48 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get("/summary", (req:Request, res:Request) => {
-  
+  const name = req.body
+  const result = summarise(name)
   // TODO: implement me
-  res.status(500).send("not yet implemented!")
+   // TODO: implement me
+   if ('error' in result) {
+    res.status(400)
+  }
+  
+  if ('errornn' in result) {
+    res.status(401)
+  }
+  res.json(result);
 
 });
 
+const summarise = (name: string) => {
+  // A recipe with the corresponding name cannot be found.
+  // The searched name is NOT a recipe name (ie. an ingredient).
+  const fetchItem: recipe = cookbook.entries.find(x => x.name == name)
+  if (fetchItem == undefined) {
+    return {error: 'placeholder'}
+  } else if (fetchItem.type != 'recipe') {
+    return {error: 'placeholder'}
+  }
+  
+  // The recipe contains recipes or ingredients that aren't in the cookbook.
+  // gng wat does this mean
+  const ingredientList = fetchItem.requiredItems.map(x => x.name)
+  const isInCookbook = ingredientList.filter(x => cookbook.ingredients.includes(x))
+  if (isInCookbook.length != ingredientList.length) {
+    return {errornn: 'placeholder'}
+  }
+
+  const ingredientsInRecipe = cookbook.entries.filter(x => ingredientList.includes(x.name))
+  const cookTime = ingredientsInRecipe.reduce((n, {cookTime}) => n + cookTime, 0);
+  const summary = {
+    name, 
+    cookTime,
+    ingredients: fetchItem.requiredItems.slice()
+  }
+  return summary
+}
 // =============================================================================
 // ==== DO NOT TOUCH ===========================================================
 // =============================================================================
