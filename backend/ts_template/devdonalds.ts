@@ -47,7 +47,6 @@ app.post('/parse', (req:Request, res:Response) => {
 // [TASK 1] ====================================================================
 // Takes in a recipeName and returns it in a form that
 const parse_handwriting = (recipeName: string): string | null => {
-  // implement me
   // Removes hypens (-, _) as whitespace, and  deletes non alphabet/space chars
   const dashesBegone = /-|_/g;
   const onlyAlpha = /[^a-zA-Z ]/g;
@@ -73,6 +72,7 @@ const parse_handwriting = (recipeName: string): string | null => {
 app.post('/entry', (req:Request, res:Response) => {
   const { type, name } = req.body;
   let extra;
+  // typeguarding due to dual type nature 
   if ('requiredItems' in req.body) {
     // le recipe
     extra = req.body.requiredItems;
@@ -117,6 +117,7 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
   }
   return { };
 };
+
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
 app.get('/summary', (req:Request, res:Request) => {
