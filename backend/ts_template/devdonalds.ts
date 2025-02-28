@@ -135,21 +135,21 @@ app.get("/summary", (req:Request, res:Request) => {
 });
 
 const summarise = (name: string) => {
-  // A recipe with the corresponding name cannot be found.
-  // The searched name is NOT a recipe name (ie. an ingredient).
+  // err400 A recipe with the corresponding name cannot be found.
+  // err400 (after) The searched name is NOT a recipe name (ie. an ingredient).
   const fetchItem: recipe = cookbook.entries.find(x => x.name == name)
   if (fetchItem == undefined) {
-    return {error: 'placeholder err1', COOKBOOK: cookbook.entries, name}
+    return {error: 'A recipe with the corresponding name cannot be found.'}
   } else if (fetchItem.type != 'recipe') {
-    return {error: 'placeholder err2'}
+    return {error: 'The searched name is NOT a recipe name (ie. an ingredient).'}
   }
   
-  // The recipe contains recipes or ingredients that aren't in the cookbook.
+  // err400 The recipe contains recipes or ingredients that aren't in the cookbook.
   // gng wat does this mean
   const ingredientList = fetchItem.requiredItems.map(x => x.name)
   const isInCookbook = ingredientList.filter(x => cookbook.ingredients.includes(x))
   if (isInCookbook.length != ingredientList.length) {
-    return {error: 'placeholder err3', cookbook}
+    return {error: 'The recipe contains recipes or ingredients that aren\'t in the cookbook.'}
   }
 
   const ingredientsInRecipe = cookbook.entries.filter(x => ingredientList.includes(x.name))
