@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
 // ==== Type Definitions, feel free to add or modify ==========================
 interface cookbookEntry {
@@ -30,140 +30,136 @@ const app = express();
 app.use(express.json());
 
 // Store your recipes here!
-const cookbook = {recipes: [], ingredients: [], entries: []}
+const cookbook = { recipes: [], ingredients: [], entries: [] };
 
 // Task 1 helper (don't touch)
-app.post("/parse", (req:Request, res:Response) => {
+app.post('/parse', (req:Request, res:Response) => {
   const { input } = req.body;
 
-  const parsed_string = parse_handwriting(input)
+  const parsed_string = parse_handwriting(input);
   if (parsed_string == null) {
-    res.status(400).send("this string is cooked");
+    res.status(400).send('this string is cooked');
     return;
-  } 
+  }
   res.json({ msg: parsed_string });
-  return;
-  
 });
 
 // [TASK 1] ====================================================================
-// Takes in a recipeName and returns it in a form that 
+// Takes in a recipeName and returns it in a form that
 const parse_handwriting = (recipeName: string): string | null => {
   // implement me
   // Removes hypens (-, _) as whitespace, and  deletes non alphabet/space chars
-  const dashesBegone = /-|_/g
-  const onlyAlpha = /[^a-zA-Z ]/g
-  const removeForbiddenCharPt1 = (recipeName.replace(dashesBegone, ' ')).replace(/ +/g, " ")
+  const dashesBegone = /-|_/g;
+  const onlyAlpha = /[^a-zA-Z ]/g;
+  const removeForbiddenCharPt1 = (recipeName.replace(dashesBegone, ' ')).replace(/ +/g, ' ');
   // got too long
-  const removeForbiddenChar = removeForbiddenCharPt1.replace(onlyAlpha, '').toLowerCase()
+  const removeForbiddenChar = removeForbiddenCharPt1.replace(onlyAlpha, '').toLowerCase();
   // if nothing is left return null
-  if (removeForbiddenChar.length == 0) {
-    return null
+  if (removeForbiddenChar.length === 0) {
+    return null;
   }
-  const newNameList = removeForbiddenChar.split(' ').map(x => x[0].toUpperCase() + x.slice(1))
+  const newNameList = removeForbiddenChar.split(' ').map(x => x[0].toUpperCase() + x.slice(1));
 
-  const res = newNameList.join(' ')
-  if (res.length == 0) {
-    return null
+  const res = newNameList.join(' ');
+  if (res.length === 0) {
+    return null;
   }
-  
-  return res
-}
+
+  return res;
+};
 
 // [TASK 2] ====================================================================
 // Endpoint that adds a CookbookEntry to your magical cookbook
-app.post("/entry", (req:Request, res:Response) => {
-  let {type, name} = req.body
-  let extra
+app.post('/entry', (req:Request, res:Response) => {
+  const { type, name } = req.body;
+  let extra;
   if ('requiredItems' in req.body) {
     // le recipe
-    extra = req.body.requiredItems
+    extra = req.body.requiredItems;
   } else if ('cookTime' in req.body) {
     // ingredient
-    extra = req.body.cookTime
+    extra = req.body.cookTime;
   }
   try {
-    const result = add_entry(type, name, extra)
+    const result = add_entry(type, name, extra);
     res.json(result);
   } catch (err) {
-    res.status(400).send(err)
-  } 
-  
+    res.status(400).send(err);
+  }
 });
 
 const add_entry = (type: string, name: string, extra: number|requiredItem[]) => {
   // errors: if the name already exists, if cooktime < 0, type is not recipe/ingredient
-  if (type != 'recipe' && type != 'ingredient') {
-    throw Error('Type must be recipe/ingredient')
-  } else if (cookbook.entries.find(x => x.name == name) != undefined) {
-    throw Error('Name already exists')
+  if (type !== 'recipe' && type !== 'ingredient') {
+    throw Error('Type must be recipe/ingredient');
+  } else if (cookbook.entries.find(x => x.name === name) !== undefined) {
+    throw Error('Name already exists');
   }
 
-  if (typeof extra == 'number') {
-    if (extra < 0) { 
-      throw Error('Cooktime must be a non negative number')
+  if (typeof extra === 'number') {
+    if (extra < 0) {
+      throw Error('Cooktime must be a non negative number');
     } else { // put dat shit in else
-      cookbook.ingredients.push(name)
-      cookbook.entries.push({type, name, cookTime: extra})
+      cookbook.ingredients.push(name);
+      cookbook.entries.push({ type, name, cookTime: extra });
     }
   } else {
     // Recipe requiredItems can only have one element per name.
     // yo what does this error mean gng
-    const copyRequiredItems = new Set(extra.slice().map(x => x.name))
+    const copyRequiredItems = new Set(extra.slice().map(x => x.name));
     // yea diff lengths means theres dupes yea hopefully x
-    if (copyRequiredItems.size != extra.length) {
-      throw Error('Recipe requiredItems can only have one element per name')
+    if (copyRequiredItems.size !== extra.length) {
+      throw Error('Recipe requiredItems can only have one element per name');
     } else {
-      cookbook.recipes.push(name)
-      cookbook.entries.push({type, name, requiredItems: extra.slice()})
+      cookbook.recipes.push(name);
+      cookbook.entries.push({ type, name, requiredItems: extra.slice() });
     }
   }
-  return { }
-}
+  return { };
+};
 // [TASK 3] ====================================================================
 // Endpoint that returns a summary of a recipe that corresponds to a query name
-app.get("/summary", (req:Request, res:Request) => {
-  const name = req.query.name
+app.get('/summary', (req:Request, res:Request) => {
+  const name = req.query.name;
   try {
-    const result = summarise(name)
+    const result = summarise(name);
     res.json(result);
   } catch (err) {
-    res.status(400).send(err)
+    res.status(400).send(err);
   }
 });
 
 const summarise = (name: string) => {
   // err400 A recipe with the corresponding name cannot be found.
   // err400 (after) The searched name is NOT a recipe name (ie. an ingredient).
-  const fetchItem: recipe = cookbook.entries.find(x => x.name == name)
-  if (fetchItem == undefined) {
-    throw Error('A recipe with the corresponding name cannot be found.')
-  } else if (fetchItem.type != 'recipe') {
-    throw Error('The searched name is NOT a recipe name (ie. an ingredient).')
-  }
-  
-  // err400 The recipe contains recipes or ingredients that aren't in the cookbook.
-  // gng wat does this mean
-  const ingredientList = fetchItem.requiredItems.map(x => x.name)
-  const isInCookbook = ingredientList.filter(x => cookbook.ingredients.includes(x))
-  if (isInCookbook.length != ingredientList.length) {
-    throw Error('The recipe contains recipes or ingredients that aren\'t in the cookbook.')
+  const fetchItem: recipe = cookbook.entries.find(x => x.name === name);
+  if (fetchItem === undefined) {
+    throw Error('A recipe with the corresponding name cannot be found.');
+  } else if (fetchItem.type !== 'recipe') {
+    throw Error('The searched name is NOT a recipe name (ie. an ingredient).');
   }
 
-  const ingredientsInRecipe = cookbook.entries.filter(x => ingredientList.includes(x.name))
-  const cookTime = ingredientsInRecipe.reduce((n, {cookTime}) => n + cookTime, 0);
+  // err400 The recipe contains recipes or ingredients that aren't in the cookbook.
+  // gng wat does this mean
+  const ingredientList = fetchItem.requiredItems.map(x => x.name);
+  const isInCookbook = ingredientList.filter(x => cookbook.ingredients.includes(x));
+  if (isInCookbook.length !== ingredientList.length) {
+    throw Error('The recipe contains recipes or ingredients that aren\'t in the cookbook.');
+  }
+
+  const ingredientsInRecipe = cookbook.entries.filter(x => ingredientList.includes(x.name));
+  const cookTime = ingredientsInRecipe.reduce((n, { cookTime }) => n + cookTime, 0);
   const summary = {
-    name, 
+    name,
     cookTime,
     ingredients: fetchItem.requiredItems.slice()
-  }
-  return summary
-}
+  };
+  return summary;
+};
 // =============================================================================
 // ==== DO NOT TOUCH ===========================================================
 // =============================================================================
 const port = 8080;
 app.listen(port, () => {
-  console.log(`Running on: http://127.0.0.1:8080`);
+  console.log('Running on: http://127.0.0.1:8080');
 });
-
