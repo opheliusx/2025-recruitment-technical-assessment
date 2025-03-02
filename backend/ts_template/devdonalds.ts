@@ -44,16 +44,16 @@ app.post('/parse', (req:Request, res:Response) => {
 // Takes in a recipeName and returns it in a form that
 const parse_handwriting = (recipeName: string): string | null => {
   // Removes hypens (-, _) as whitespace, and  deletes non alphabet/space chars
-  const dashesBegone = /-|_/g;
-  const onlyAlpha = /[^a-zA-Z ]/g;
-  const removeForbiddenCharPt1 = (recipeName.replace(dashesBegone, ' ')).replace(/ +/g, ' ');
+  const dashes_begone = /-|_/g;
+  const only_alpha = /[^a-zA-Z ]/g;
+  const remove_forbidden_chars = (recipeName.replace(dashes_begone, ' ')).replace(/ +/g, ' ');
   // got too long
-  const removeForbiddenChar = removeForbiddenCharPt1.replace(onlyAlpha, '').toLowerCase();
+  const remove_non_alpha = remove_forbidden_chars.replace(only_alpha, '').toLowerCase();
   // if nothing is left return null
-  if (removeForbiddenChar.length === 0) {
+  if (remove_non_alpha.length === 0) {
     return null;
   }
-  const newNameList = removeForbiddenChar.split(' ').map(x => x[0].toUpperCase() + x.slice(1));
+  const newNameList = remove_non_alpha.split(' ').map(x => x[0].toUpperCase() + x.slice(1));
 
   const res = newNameList.join(' ');
   return res;
@@ -98,9 +98,9 @@ const add_entry = (type: string, name: string, extra: number|requiredItem[]) => 
   } else {
     // Recipe requiredItems can only have one element per name.
     // yo what does this error mean gng
-    const copyRequiredItems = new Set(extra.slice().map(x => x.name));
+    const copy_required_items = new Set(extra.slice().map(x => x.name));
     // yea diff lengths means theres dupes yea hopefully x
-    if (copyRequiredItems.size !== extra.length) {
+    if (copy_required_items.size !== extra.length) {
       throw Error('Recipe requiredItems can only have one element per name');
     } else {
       cookbook.recipes.push(name);
@@ -126,33 +126,33 @@ const summarise = (name: string) => {
   // i got bored so i added that if a summary exists it just gets returned
   // probably more efficient idk if the original code takes a long time for large datasets
   // its logn probably?? binary search?  and everything after is n
-  const existingSummary = cookbook.summaries.find(x => x.name === name) 
-  if (existingSummary !== undefined) {
-    return existingSummary
+  const existing_summary = cookbook.summaries.find(x => x.name === name) 
+  if (existing_summary !== undefined) {
+    return existing_summary
   }
   // err400 A recipe with the corresponding name cannot be found.
   // err400 (after) The searched name is NOT a recipe name (ie. an ingredient).
-  const fetchItem: recipe = cookbook.entries.find(x => x.name === name);
-  if (fetchItem === undefined) {
+  const item: recipe = cookbook.entries.find(x => x.name === name);
+  if (item === undefined) {
     throw Error('A recipe with the corresponding name cannot be found.');
-  } else if (fetchItem.type !== 'recipe') {
+  } else if (item.type !== 'recipe') {
     throw Error('The searched name is NOT a recipe name (ie. an ingredient).');
   }
 
   // err400 The recipe contains recipes or ingredients that aren't in the cookbook.
   // gng wat does this mean
-  const ingredientList = fetchItem.requiredItems.map(x => x.name);
-  const isInCookbook = ingredientList.filter(x => cookbook.ingredients.includes(x));
-  if (isInCookbook.length !== ingredientList.length) {
+  const ingredient_list = item.requiredItems.map(x => x.name);
+  const is_in_cookbook = ingredient_list.filter(x => cookbook.ingredients.includes(x));
+  if (is_in_cookbook.length !== ingredient_list.length) {
     throw Error('The recipe contains recipes or ingredients that aren\'t in the cookbook.');
   }
 
-  const ingredientsInRecipe = cookbook.entries.filter(x => ingredientList.includes(x.name));
-  const cookTime = ingredientsInRecipe.reduce((n, { cookTime }) => n + cookTime, 0);
+  const in_recipe = cookbook.entries.filter(x => ingredient_list.includes(x.name));
+  const cookTime = in_recipe.reduce((n, { cookTime }) => n + cookTime, 0);
   const summary = {
     name,
     cookTime,
-    ingredients: fetchItem.requiredItems.slice()
+    ingredients: item.requiredItems.slice()
   };
   cookbook.summaries.push(summary)
   return summary;
